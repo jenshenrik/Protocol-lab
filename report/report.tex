@@ -1,6 +1,19 @@
 \documentclass{article}
 
 \usepackage[utf8]{inputenc}
+\usepackage{lipsum}
+\usepackage{listings}
+
+\newcommand\Q[1]{
+	\leavevmode\par
+	\noindent
+	\textbf{Q -- #1}
+	\\
+}
+
+\newcommand\A[1]{
+	\textbf{A} -- #1
+}
 
 \title{Protocol Security Lab}
 \author{Jens Henrik Skuldbøl, s070145}
@@ -13,6 +26,15 @@
 \section{Kerberos PKInit}
 
 \subsection{Describe the protocol}
+\Q{Which of the messages can the client \emph{C} decrypt?}
+\A{42.\par Basta.}
+
+\Q{Which keys does \emph{C} ever learn?}
+\A{asdf}
+
+\Q{How does the protocol prevent illegitimate access?}
+\A{\lipsum}
+
 
 \subsection{Explain the attack}
 
@@ -27,5 +49,18 @@
 \subsection{Suggest and verify a fix}
 
 \subsection{Revoke \emph{S'} trustworthy status}
+
+\appendix
+
+\section{Code}
+
+\subsection{PKInit}
+\lstinputlisting
+	[
+		basicstyle=\footnotesize,
+		numbers=left, 
+		numberstyle=\tiny
+	]
+	{../code/handouts/PKINIT.AnB}
 
 \end{document}
