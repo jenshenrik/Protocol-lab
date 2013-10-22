@@ -1,0 +1,17 @@
+Open-Source Fixedpoint Model-Checker version 2013a
+INPUT:
+   PKINIT_dh.AnB
+SUMMARY:
+  NO_ATTACK_FOUND
+GOAL:
+  as specified
+DETAILS:
+  BOUNDED_NUMBER_OF_SESSIONS
+BACKEND:
+  Open-Source Fixedpoint Model-Checker version 2013a
+STATISTICS:
+  TIME 6028 ms
+  parseTime 8 ms
+  visitedNodes: 3187 nodes
+  depth: 8 plies
+

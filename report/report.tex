@@ -3,16 +3,17 @@
 \usepackage[utf8]{inputenc}
 \usepackage{lipsum}
 \usepackage{listings}
+\usepackage{mdwlist}
 
 \newcommand\Q[1]{
 	\leavevmode\par
 	\noindent
-	\textbf{Q -- #1}
+	\emph{Q -- #1}
 	\\
 }
 
 \newcommand\A[1]{
-	\textbf{A} -- #1
+	A -- #1
 }
 
 \title{Protocol Security Lab}
@@ -26,23 +27,142 @@
 \section{Kerberos PKInit}
 
 \subsection{Describe the protocol}
+This protocol required the client to comunicate with two servers,
+the authentication server, \texttt{ath}, and the ticket issuing server, 
+\texttt{g}, before gaining access to the requested ressource.
+First, the client contacts the authentication server, requesting access
+to the desired ressource.
+Assuming that the clients identity is verified, the server replies
+with a session key, and a key the client shares with \texttt{g}.
+This key is encrypted using a key unknown to the client,
+a key shared between \texttt{ath} and \texttt{g},
+which prevents it being tampered with.
+
+The client then passes this session key on to \texttt{g},
+along with his identity, encrypted with his and \texttt{g}'s shared key.
+Assuming the client is authorized to access the requested ressource,
+\texttt{g} issues and returns a ticket to the client.
+This ticket is also encrypted with a key unknown to the client,
+a key shared between \texttt{g} and the host of the ressource, \texttt{s},
+to prevent tampering.
+
+The client can now send this ticket to the server he wishes to access,
+which then replies with the requested ressource.
+
 \Q{Which of the messages can the client \emph{C} decrypt?}
-\A{42.\par Basta.}
+\A{
+	Strictly speaking, the client can decrypt all of the messages.
+	He cannot, however, decrypt all parts of some of them, these begin
+	particularly the session key, sent to him from \texttt{ath} encrypted
+	using \texttt{skag}, the shared key between \texttt{ath} and \texttt{g}.
+	Also, he cannot decrypt the ticked, sent to him from \texttt{g} encrypted
+	using \texttt{skgs}, the shared key between \texttt{g} and \texttt{s}.
+}
 
 \Q{Which keys does \emph{C} ever learn?}
-\A{asdf}
+\A{
+	From the beginning, the client knows the following keys
+	\begin{itemize*}
+		\item \texttt{pk(C)}/\texttt{inv(pk)c))} -- his own public/private keypair
+		\item \texttt{pk(ath)} -- the public key of \texttt{ath}
+	\end{itemize*}
+	
+	Communicating with \texttt{ath}, the client learns the following keys
+	\begin{itemize*}
+		\item \texttt{Ktemp} -- A temporary key used by \texttt{ath} to encrypt \texttt{KCG}
+		\item \texttt{KCG} -- The shared key between the client and \texttt{g}
+	\end{itemize*}
+
+	Communicating with \texttt{g}, the client learns \texttt{KCS}, the key shared
+	between him and \texttt{s}, the server he wishes to access.
+}
 
 \Q{How does the protocol prevent illegitimate access?}
-\A{\lipsum}
+\A{
+	The protocol prevents illigitimate access by verifying both the users
+	identity, and that he is authorized to access the requested ressource.
+	The integrety of this authentication is kept by giving the ticket an
+	expiration date, and by keeping both session keys and tickets encrypted
+	between the authenticating servers, thus preventing them from being
+	tampered with by anyone, including the user.
+}
 
 
 \subsection{Explain the attack}
+The output of OFMC after finding the attack is included in \ref{app:pktrace}.
+As can be seen from the first two messages of the attack, found in lines 17 and 18,
+the intruder performs a 'man in the middle'-attack between the client and
+the authentication server.
+The intruder then subsequently exchanges the identity of the servers with his own,
+making sure \texttt{C} keeps sending messages to him.
+
+The protocol is fixed by encrypting the first message from the \texttt{C} to \texttt{ath}
+with \texttt{ath}'s public key, thereby making it decipherable by \texttt{ath} only.
+
+The fix is verified for two sessions using OFMC, with the output listed in \ref{app:pkfix-log}.
+The first message then becomes
+\begin{verbatim}
+C -> ath: {C,g,N1,{T0,N1,hash(C,g,N1)}inv(pk(C))}pk(ath)
+\end{verbatim}
 
 \subsection{Design a variant}
+The code for the variant is included in \ref{app:pkdh}.
+Note that this variant builds on the changes made in the fix listed above.
+First of all, there are some changes to the types and knowledge.
+Added to the types are three numbers, \texttt{p}, \texttt{x} and \texttt{y},
+and a function, \texttt{exp}.
+
+\texttt{p} is the public number, known by both \texttt{C} and \texttt{ath}.
+\texttt{x} and \texttt{y} are the secrets of \texttt{C} and \texttt{ath} respectively,
+and the exponential function, \texttt{exp} is known by both of them.
+
+Changes in communication are in the first message from \texttt{C} to \texttt{ath},
+and the reply.
+First of all, \texttt{C} includes in his message the calculation \texttt{exp(p,x)},
+which is his half of the Diffie-Hellman key.
+In its reply, \texttt{ath} now includes \texttt{exp(p,y)},
+but instead of encrypting \texttt{KCG} with a temporary key,
+it now encrypts it with the complete Diffie-Hellman key,
+\texttt{enc(enc(p,x),y)}.
+
+The verifying output of OFMC is listed in \ref{app:pkdh-fix}.
 
 \section{AMP}
 
 \subsection{Describe and explain the protocol}
+
+\Q{What security relationship does the parties have initially?}
+\A{
+	Looking at the initial knowledge, \texttt{C} knows the public keys
+	of \texttt{s} and \texttt{RP}, \texttt{s} knows the public key of \texttt{C},
+	and \texttt{RP} knows the public key of \texttt{s}.
+	In the cases where the knowledge of public keys are mirrored, that is, the recipient
+	knows the public key of the sender, and the other way around, a secure channel can be
+	established. This is achieved by the sender encrypting messages in the recipients
+	public key, providing confidentiality, and his own private key, providing authentication.
+	
+	In cases where the recipient does not know the public key of the sender,
+	only confidentiality is ensured.
+
+	In this specific case, a secure channel can be established between \texttt{C} and \texttt{s}.
+	Additionally, confidential channels can be established between
+	\begin{itemize*}
+		\item \texttt{C} and \texttt{RP}
+		\item \texttt{RP} and \texttt{s}
+	\end{itemize*}
+	with the sender being the former, and the recipient the latter.
+}
+
+\Q{What new security relationship does the protocol try to establish?}
+\A{
+	The protocol tries to establish a secure connection between \texttt{C}
+	and \texttt{RP} on which they can share a secret, \texttt{Data}.
+}
+
+\Q{How does the protocol try to achieve this?}
+\A{
+	asdf
+}
 
 \subsection{Analyse and explain the attack}
 
@@ -55,6 +175,8 @@
 \section{Code}
 
 \subsection{PKInit}
+
+\subsubsection{Handout code}
 \lstinputlisting
 	[
 		basicstyle=\footnotesize,
@@ -62,5 +184,72 @@
 		numberstyle=\tiny
 	]
 	{../code/handouts/PKINIT.AnB}
+
+\subsubsection{Attack trace}
+\label{app:pktrace}
+\lstinputlisting
+	[
+		basicstyle=\footnotesize,
+		numbers=left,
+		numberstyle=\tiny,
+		breaklines=true
+	]
+	{../code/handouts/PKINIT.log}
+	
+\subsubsection{Fix verification}
+\label{app:pkfix-log}
+\lstinputlisting
+	[
+		basicstyle=\footnotesize,
+		numbers=left,
+		numberstyle=\tiny,
+		breaklines=true
+	]
+	{../code/written/PKINIT_fix.log}
+
+\subsubsection{Diffie-Hellman variant}
+\label{app:pkdh}
+\lstinputlisting
+	[
+		basicstyle=\footnotesize,
+		numbers=left,
+		numberstyle=\tiny,
+		breaklines=true
+	]
+	{../code/written/PKINIT_dh.AnB}
+
+\subsubsection{Variant verification}
+\label{app:pkdh-log}
+\lstinputlisting
+	[
+		basicstyle=\footnotesize,
+		numbers=left,
+		numberstyle=\tiny,
+		breaklines=true
+	]
+	{../code/written/PKINIT_dh.log}
+	
+\subsection{AMP}
+
+\subsubsection{Handout code}
+\lstinputlisting
+	[
+		basicstyle=\footnotesize,
+		numbers=left,
+		numberstyle=\tiny,
+		breaklines=true
+	]
+	{../code/handouts/AMP.AnB}
+
+\subsubsection{Attack trace}
+\label{app:amptrace}
+\lstinputlisting
+	[
+		basicstyle=\footnotesize,
+		numbers=left,
+		numberstyle=\tiny,
+		breaklines=true
+	]
+	{../code/handouts/AMP.log}
 
 \end{document}
