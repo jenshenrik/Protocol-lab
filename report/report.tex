@@ -161,22 +161,61 @@ The verifying output of OFMC is listed in \ref{app:pkdh-fix}.
 
 \Q{How does the protocol try to achieve this?}
 \A{
-	asdf
+	The protocol attempts this by letting \texttt{C} be verified by \texttt{s}.
+	After making a request to \texttt{RP}, \texttt{C} receives a reply
+	containing a request ID, \texttt{ReqID}.
+	\texttt{C} then sends a message containing the request and ID to \texttt{s},
+	who verifies it, and sends back a confirmation.
+
+	\texttt{C} can now send a message to \texttt{RP} telling it, that he is
+	athenticated by \texttt{s}, in return for the \texttt{Data}.
 }
 
 \subsection{Analyse and explain the attack}
+\texttt{i} imposes as \texttt{RP}, thereby intercepting the first message from
+\texttt{C} to \texttt{RP}. He then exchanges \texttt{Request} and \texttt{K} 
+with his own values, and reencrypts using \texttt{RP}'s public key, and sends the request.
+
+He then sends the \texttt{ReqID} to his own request back to \texttt{C} who gets it
+authenticated from \texttt{s}. \texttt{C} then returns \texttt{i}'s authenticated
+token to him, which he then sends to \texttt{RP} in order to get the \texttt{Data}
+from it.
 
 \subsection{Suggest and verify a fix}
+The attack occurs, as \texttt{C} thinks \texttt{i} is in fact a trusted
+instance of the provider, \texttt{RP}. Therefor, nothing can be done
+about \texttt{i} intercepting the request from \texttt{C}.
 
-\subsection{Revoke \emph{S'} trustworthy status}
+Looking at the messages, though, \texttt{i} has no way of decrypting
+the communication between \texttt{C} and \texttt{s}.
+These messages are simply relayed through \texttt{i}.
+A fix is therefor implemented by including \texttt{C}'s original
+\texttt{Request} and \texttt{ReqID} in the messages between these two parties.
+Now \texttt{i} has no way of slipping in his forged \texttt{Request} and
+\texttt{ReqID}, and only the original \texttt{Request} by \texttt{C}
+is verified by \texttt{s}.
 
+The changes occur in lines 17, 18 and 20, 
+and the resulting code can be found in \ref{app:ampfix}, 
+with the verified output in \ref{app:ampver}.
+
+\subsection{Revoke \emph{S}' trustworthy status}
+The attack in the previously fixed protocol, when \texttt{s} is no longer
+considered honest, happens for the same reason \texttt{i} was able
+to intercept the original request previously.
+\texttt{S} is no longer guaranteed to be who he says he is,
+and therefor, \texttt{C} sends the request to an intruder, thinking
+he is an honest provider.
+
+Seeing as neither \texttt{RP} nor \texttt{S} can be authenticated in the new protocol,
+I believe no fix can be made with the given goals and initial knowledge.
+
+\newpage
 \appendix
 
-\section{Code}
+\section{PKInit}
 
-\subsection{PKInit}
-
-\subsubsection{Handout code}
+\subsection{Handout code}
 \lstinputlisting
 	[
 		basicstyle=\footnotesize,
@@ -185,7 +224,7 @@ The verifying output of OFMC is listed in \ref{app:pkdh-fix}.
 	]
 	{../code/handouts/PKINIT.AnB}
 
-\subsubsection{Attack trace}
+\subsection{Attack trace}
 \label{app:pktrace}
 \lstinputlisting
 	[
@@ -196,7 +235,7 @@ The verifying output of OFMC is listed in \ref{app:pkdh-fix}.
 	]
 	{../code/handouts/PKINIT.log}
 	
-\subsubsection{Fix verification}
+\subsection{Fix verification}
 \label{app:pkfix-log}
 \lstinputlisting
 	[
@@ -207,7 +246,7 @@ The verifying output of OFMC is listed in \ref{app:pkdh-fix}.
 	]
 	{../code/written/PKINIT_fix.log}
 
-\subsubsection{Diffie-Hellman variant}
+\subsection{Diffie-Hellman variant}
 \label{app:pkdh}
 \lstinputlisting
 	[
@@ -218,7 +257,7 @@ The verifying output of OFMC is listed in \ref{app:pkdh-fix}.
 	]
 	{../code/written/PKINIT_dh.AnB}
 
-\subsubsection{Variant verification}
+\subsection{Variant verification}
 \label{app:pkdh-log}
 \lstinputlisting
 	[
@@ -229,9 +268,9 @@ The verifying output of OFMC is listed in \ref{app:pkdh-fix}.
 	]
 	{../code/written/PKINIT_dh.log}
 	
-\subsection{AMP}
+\section{AMP}
 
-\subsubsection{Handout code}
+\subsection{Handout code}
 \lstinputlisting
 	[
 		basicstyle=\footnotesize,
@@ -241,7 +280,7 @@ The verifying output of OFMC is listed in \ref{app:pkdh-fix}.
 	]
 	{../code/handouts/AMP.AnB}
 
-\subsubsection{Attack trace}
+\subsection{Attack trace}
 \label{app:amptrace}
 \lstinputlisting
 	[
@@ -251,5 +290,27 @@ The verifying output of OFMC is listed in \ref{app:pkdh-fix}.
 		breaklines=true
 	]
 	{../code/handouts/AMP.log}
+
+\subsection{Fixed AMP}
+\label{app:ampfix}
+\lstinputlisting
+	[
+		basicstyle=\footnotesize,
+		numbers=left,
+		numberstyle=\tiny,
+		breaklines=true
+	]
+	{../code/written/AMP.AnB}
+
+\subsection{Fix Verification}
+\label{app:ampver}
+\lstinputlisting
+	[
+		basicstyle=\footnotesize,
+		numbers=left,
+		numberstyle=\tiny,
+		breaklines=true
+	]
+	{../code/written/AMP.log}
 
 \end{document}

@@ -1,0 +1,17 @@
+Open-Source Fixedpoint Model-Checker version 2013a
+INPUT:
+   AMP.AnB
+SUMMARY:
+  NO_ATTACK_FOUND
+GOAL:
+  as specified
+DETAILS:
+  BOUNDED_NUMBER_OF_SESSIONS
+BACKEND:
+  Open-Source Fixedpoint Model-Checker version 2013a
+STATISTICS:
+  TIME 13560 ms
+  parseTime 8 ms
+  visitedNodes: 10957 nodes
+  depth: 14 plies
+
