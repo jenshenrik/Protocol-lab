@@ -4,6 +4,14 @@
 \usepackage{lipsum}
 \usepackage{listings}
 \usepackage{mdwlist}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{Technical University of Denmark}
+\fancyhead[L]{02239 -- Data security}
+\fancyfoot[R]{\thepage}
+\fancyfoot[L]{s070145 -- Jens Henrik Skuldbøl}
 
 \newcommand\Q[1]{
 	\leavevmode\par
@@ -23,11 +31,19 @@
 \begin{document}
 
 \maketitle
+\thispagestyle{empty}
+
+\begin{quote}
+	The implemented solutions in this assignment were discussed
+	with Brian Lynnerup Pedersen, s042457, during development.
+\end{quote}
+
+\newpage
 
 \section{Kerberos PKInit}
 
 \subsection{Describe the protocol}
-This protocol required the client to comunicate with two servers,
+This protocol requires the client to comunicate with two servers,
 the authentication server, \texttt{ath}, and the ticket issuing server, 
 \texttt{g}, before gaining access to the requested ressource.
 First, the client contacts the authentication server, requesting access
